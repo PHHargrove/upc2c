@@ -17,6 +17,7 @@
 #include <string>
 #include <cctype>
 #include "../../lib/Sema/TreeTransform.h"
+#include <iostream>
 
 using namespace clang;
 using namespace clang::tooling;
@@ -1887,6 +1888,9 @@ namespace {
 	"#define UPCR_TRANS_EXTRA_INCL\n"
 	"#ifndef __builtin_va_arg\n" // subclass of Expr - cannot be renamed directly
 	"#define __builtin_va_arg(_a1,_a2) va_arg(_a1,_a2)\n"
+	"#endif\n"
+	"#ifndef __builtin_offsetof\n" // subclass of Expr - cannot be renamed directly
+	"#define __builtin_offsetof(_a1,_a2) offsetof(_a1,_a2)\n"
 	"#endif\n"
 	"int32_t UPCR_TLD_DEFINE_TENTATIVE(upcrt_forall_control, 4, 4);\n"
 	"#ifndef UPCR_EXIT_FUNCTION\n"
