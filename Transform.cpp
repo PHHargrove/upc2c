@@ -17,7 +17,6 @@
 #include <string>
 #include <cctype>
 #include "../../lib/Sema/TreeTransform.h"
-#include <iostream>
 
 using namespace clang;
 using namespace clang::tooling;
