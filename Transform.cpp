@@ -637,6 +637,16 @@ namespace {
       const IntegerLiteral *Lit = dyn_cast<IntegerLiteral>(E->IgnoreParenCasts());
       return (Lit && Lit->getValue() == value);
     }
+    ExprResult CreateSizeOf(QualType Ty) {
+      SourceLocation SLoc = SourceLocation(); // FIXME: can we do better?
+      if(isPointerToShared(Ty)) {
+	Ty = isPhaseless(Ty->getAs<PointerType>()->getPointeeType())?
+	        Decls->upcr_pshared_ptr_t : Decls->upcr_shared_ptr_t;
+      } else {
+        Ty = Ty.getUnqualifiedType();
+      }
+      return SemaRef.CreateUnaryExprOrTypeTraitExpr(SemaRef.Context.getTrivialTypeSourceInfo(Ty), SLoc, UETT_SizeOf, SourceRange(SLoc,SLoc));
+    }
     Expr *FoldUPCRLoadStore(Expr* &E, bool &Phaseless) {
       Expr *Offset = NULL;
       while (CallExpr *CE = dyn_cast<CallExpr>(E)) {
@@ -706,7 +716,7 @@ namespace {
       args.push_back(SemaRef.CreateBuiltinUnaryOp(SourceLocation(), UO_AddrOf, CreateSimpleDeclRef(TmpVar)).get());
       args.push_back(E);
       args.push_back(Offset);
-      args.push_back(CreateInteger(SemaRef.Context.getSizeType(),SemaRef.Context.getTypeSizeInChars(ResultType).getQuantity()));
+      args.push_back(CreateSizeOf(ResultType).get());
       Expr *Load = BuildUPCRCall(Accessor, args).get();
       return std::make_pair(Load, CreateSimpleDeclRef(TmpVar));
     }
@@ -800,7 +810,7 @@ namespace {
       args.push_back(LHS);
       args.push_back(Offset);
       args.push_back(SemaRef.CreateBuiltinUnaryOp(SourceLocation(), UO_AddrOf, CreateSimpleDeclRef(TmpVar)).get());
-      args.push_back(CreateInteger(SemaRef.Context.getSizeType(),SemaRef.Context.getTypeSizeInChars(Ty).getQuantity()));
+      args.push_back(CreateSizeOf(Ty).get());
       Expr *Store = BuildUPCRCall(Accessor, args).get();
       Expr *CommaRHS = Store;
       if(ReturnValue) {
