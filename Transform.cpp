@@ -647,6 +647,16 @@ namespace {
       }
       return SemaRef.CreateUnaryExprOrTypeTraitExpr(SemaRef.Context.getTrivialTypeSourceInfo(Ty), SLoc, UETT_SizeOf, SourceRange(SLoc,SLoc));
     }
+    ExprResult CreateOffsetOf(QualType Ty, ValueDecl *Field) {
+      SourceLocation SLoc = SourceLocation();
+      TypeSourceInfo * TSI = SemaRef.Context.getTrivialTypeSourceInfo(Ty.getUnqualifiedType());
+      Sema::OffsetOfComponent Comp;
+      Comp.isBrackets = false;
+      Comp.LocStart = Comp.LocEnd = SLoc; // FIXME: can we do better?
+      Comp.U.IdentInfo = Field->getIdentifier();
+      haveOffsetOf = true;
+      return SemaRef.BuildBuiltinOffsetOf(SLoc, TSI, &Comp, 1, SLoc);
+    }
     Expr *FoldUPCRLoadStore(Expr* &E, bool &Phaseless) {
       Expr *Offset = NULL;
       while (CallExpr *CE = dyn_cast<CallExpr>(E)) {
@@ -1061,11 +1071,10 @@ namespace {
 	  args.push_back(NewBase);
 	  NewBase = BuildUPCRCall(Decls->UPCR_SHARED_TO_PSHARED, args).get();
 	}
-	CharUnits Offset = SemaRef.Context.toCharUnitsFromBits(SemaRef.Context.getFieldOffset(FD));
 	std::vector<Expr *> args;
 	args.push_back(NewBase);
 	args.push_back(CreateInteger(SemaRef.Context.getSizeType(), 1));
-	args.push_back(CreateInteger(SemaRef.Context.getSizeType(), Offset.getQuantity()));
+	args.push_back(CreateOffsetOf(BaseType, FD).get());
 	return BuildUPCRCall(Decls->UPCR_ADD_PSHAREDI, args);
       } else {
 	return TreeTransformUPC::TransformMemberExpr(E);
