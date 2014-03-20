@@ -856,7 +856,7 @@ namespace {
       QualType ResultType = TransformType(Ty).getUnqualifiedType();
       QualType RHSType = RHS->getType().getUnqualifiedType();
       if(typeFitsUPCRValuePutGet(ResultType)) {
-	if (RHS->isLValue() && !ReturnValue)
+	if (RHS->isLValue() && !ReturnValue) {
 	  // Case 1. Put RHS by value, with type cast if necessary
 	  SrcArg = RHS;
 	  if(!SemaRef.Context.typesAreCompatible(ResultType, RHSType)) {
@@ -883,7 +883,7 @@ namespace {
 	  Accessor = Decls->UPCR_PUT_IVAL;
 	}
       } else if (RHS->isLValue() && !ReturnValue &&
-		 SemaRef.Context.typesAreCompatible(ResultType, RHSType)) &&
+		 SemaRef.Context.typesAreCompatible(ResultType, RHSType)) {
 	// Case 3. Put RHS by reference (safe because no return or type conversion required)
 	SrcArg = SemaRef.CreateBuiltinUnaryOp(SourceLocation(), UO_AddrOf, RHS).get();
       } else {
