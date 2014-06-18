@@ -107,6 +107,7 @@ namespace {
     FunctionDecl * upcr_hasMyAffinity_shared;
     FunctionDecl * UPCR_BEGIN_FUNCTION;
     FunctionDecl * UPCR_EXIT_FUNCTION;
+    FunctionDecl * UPCR_SET_SRCPOS;
     FunctionDecl * UPCRT_STARTUP_PSHALLOC;
     FunctionDecl * UPCRT_STARTUP_SHALLOC;
     FunctionDecl * upcr_startup_pshalloc;
@@ -320,6 +321,12 @@ namespace {
       // UPCR_EXIT_FUNCTION
       {
 	UPCR_EXIT_FUNCTION = CreateFunction(Context, "UPCR_EXIT_FUNCTION", Context.VoidTy, NULL, 0);
+      }
+      // UPCR_SET_SRCPOS
+      {
+	QualType argTypes[] = { Context.getPointerType(Context.getConstType(Context.CharTy)),
+                                Context.IntTy };
+	UPCR_SET_SRCPOS = CreateFunction(Context, "UPCR_SET_SRCPOS", Context.VoidTy, argTypes, 2);
       }
       // UPCRT_STARTUP_PSHALLOC
       {
@@ -2039,6 +2046,9 @@ namespace {
 	{
 	  std::vector<Expr*> args;
 	  Statements.push_back(BuildUPCRCall(Decls->UPCR_BEGIN_FUNCTION, args).get());
+	  args.push_back(StringLiteral::Create(SemaRef.Context, "_" + FileString + "_ALLOC", StringLiteral::Ascii, false, SemaRef.Context.getPointerType(SemaRef.Context.getConstType(SemaRef.Context.CharTy)), SourceLocation()));
+	  args.push_back(CreateInteger(SemaRef.Context.IntTy, 0));
+	  Statements.push_back(BuildUPCRCall(Decls->UPCR_SET_SRCPOS, args).get());
 	}
 	int SizeTypeSize = SemaRef.Context.getTypeSize(SemaRef.Context.getSizeType());
 	QualType _bupc_info_type = SemaRef.Context.getIncompleteArrayType(Decls->upcr_startup_shalloc_t, ArrayType::Normal, 0);
@@ -2149,6 +2159,9 @@ namespace {
 	{
 	  std::vector<Expr*> args;
 	  Statements.push_back(BuildUPCRCall(Decls->UPCR_BEGIN_FUNCTION, args).get());
+	  args.push_back(StringLiteral::Create(SemaRef.Context, "_" + FileString + "_INIT", StringLiteral::Ascii, false, SemaRef.Context.getPointerType(SemaRef.Context.getConstType(SemaRef.Context.CharTy)), SourceLocation()));
+	  args.push_back(CreateInteger(SemaRef.Context.IntTy, 0));
+	  Statements.push_back(BuildUPCRCall(Decls->UPCR_SET_SRCPOS, args).get());
 	}
 	
 	Expr *Cond;
